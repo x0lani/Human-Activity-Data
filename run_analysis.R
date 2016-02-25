@@ -1,13 +1,18 @@
-# Collect the data from http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones#
-#
+# This script assumes that the dataset has been downloaded from
+# http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones#
+# and extracted to "UCI HAR Dataset" in the working directory
 
 library(dplyr)
 
+# readActivityLabels reads the activity labels and associated ID and returns
+# a lookup table
 readActivityLabels <- function (file = "UCI HAR Dataset/activity_labels.txt") {
     read.table(file, sep = " ",
                col.names = c("Activity.ID", "Activity.Label"))
 }
 
+# readFeatures reads the feature measurement names and associated column numbers
+# and returns a lookup table
 readFeatures <- function (file = "UCI HAR Dataset/features.txt") {
     read.table(file, sep = " ",
                col.names = c("Column.Number", "Feature"),
@@ -15,6 +20,8 @@ readFeatures <- function (file = "UCI HAR Dataset/features.txt") {
                stringsAsFactors = FALSE)
 }
 
+# readActivityData takes a list of subject IDs, activity IDs, and measurements
+# it then combines the datasets into a single table and returns it
 readActivityData <- function(subject_file = "subject_test.txt",
                              activity_file ="y_test.txt",
                              measurement_file = "X_test.txt") {
@@ -26,12 +33,12 @@ readActivityData <- function(subject_file = "subject_test.txt",
     cbind(subject.ID,activity.ID, measurements)
 }
 
+# removeColumns removes all columns from a data set, except for
+#     "subject.ID"
+#     "activity"
+#     columns containing "std"
+#     columns containing "mean"
 removeColumns <- function(dataset){
-    # this function removes all columns from a data set, except for
-    #     "subject.ID"
-    #     "activity"
-    #     columns containing "std"
-    #     columns containing "mean"
     filter <- (names(dataset) =="subject.ID") | (names(dataset) =="activity.ID")
     filter <- filter | grepl("std",names(dataset))
     filter <- filter | grepl("mean",names(dataset))
@@ -64,4 +71,6 @@ fullData <- fullData[c(2,82,3:81)]
 fullData <- arrange(tbl_df(fullData), subject.ID, Activity.Label) # convert to dplyr datatable
 fullData <- group_by(fullData, subject.ID, Activity.Label)
 summaryData <- summarise_each(fullData, funs(mean), 3:81)
+
+# output to CSV in the working directory
 write.csv(summaryData, file = "ActivityDataSummary.csv", row.names = FALSE)
